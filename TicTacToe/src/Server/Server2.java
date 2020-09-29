@@ -1,11 +1,14 @@
 package Server;
 
+import java.io.BufferedReader;
 import java.io.DataInputStream;
 import java.io.DataOutput;
 import java.io.DataOutputStream;
 import java.io.IOException;
+import java.io.InputStreamReader;
 import java.io.ObjectInputStream;
 import java.io.ObjectOutputStream;
+import java.io.PrintStream;
 import java.net.ServerSocket;
 import java.net.Socket;
 
@@ -35,10 +38,12 @@ public class Server2 {
 		BufferedReader br = new BufferedReader(new InputStreamReader(socket.getInputStream()));
 		
 		//to read data from keyboard
-		BufferedReader keyb = new BufferedReader( new InputerStreamReader(System.in));
+		BufferedReader keyb = new BufferedReader( new InputStreamReader(System.in));
 		
 		//Continiously lets you send messages
 		boolean done = false;
+		String str;
+		String str1;
 		
 		while (!done) {
 			
@@ -55,8 +60,7 @@ public class Server2 {
 			keyb.close();
 			socket.close();
 			server.close();
-			
-			System.exit(0);
 		}		
+		System.exit(0);
 	}
 }
