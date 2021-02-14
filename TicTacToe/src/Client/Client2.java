@@ -12,6 +12,7 @@ public class Client2 {
 	public static Socket socket;
 	public static DataInputStream in;
 	public static DataOutputStream out;
+	public static BufferedReader br, keybr;
 	
 	public static int portNumber = 7778;
 	
@@ -22,19 +23,21 @@ public class Client2 {
 		System.out.println("connected");
 		
 		//to send data
-		DataOutputStream dos = new DataOutputStream(socket.getOutputStream());
+		in = new DataInputStream(socket.getInputStream());
+		out = new DataOutputStream(socket.getOutputStream());
+		
 		
 		//to read data
-		BufferedReader br = new BufferedReader(new InputStreamReader(socket.getInputStream()));
+		br = new BufferedReader(new InputStreamReader(socket.getInputStream()));
 		
 		//to read data from keyboard
-		BufferedReader keyb = new BufferedReader( new InputStreamReader(System.in));
+		keybr = new BufferedReader( new InputStreamReader(System.in));
 		String str, str1;
 		
 		// will keep running until "exit" is typed
-		while(!(str = keyb.readLine()).equals("exit")) {
+		while(!(str = keybr.readLine()).equals("exit")) {
 			
-			dos.writeBytes(str + "\n");
+			out.writeBytes(str + "\n");
 			
 			str1= br.readLine();
 			
@@ -42,9 +45,9 @@ public class Client2 {
 		}
 		
 		//close all connections
-		dos.close();
+		out.close();
 		br.close();
-		keyb.close();
+		keybr.close();
 		socket.close();
 		
 	}
