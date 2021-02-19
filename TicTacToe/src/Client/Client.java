@@ -9,7 +9,9 @@ import java.net.Socket;
 import java.net.UnknownHostException;
 import java.util.Scanner;
 
-public class Client implements Runnable{
+import javax.swing.JFrame;
+
+public class Client {//implements Runnable
 	
 	private static Socket socket;
 	private static DataInputStream dis;
@@ -20,8 +22,14 @@ public class Client implements Runnable{
 	private boolean accepted = false;
 	private Scanner scanner = new Scanner(System.in);
 	
-	private boolean running = false;
-	private Thread thread;
+	//differentiating players
+	public String clientID;
+	
+	//tags
+	public static final String CLIENT_ID_TAG = Server.Server.CLIENT_ID_TAG;
+	
+	//input (should be json game type)
+	public String inputData = "";
 	
 	public Client() {
 		System.out.println("Please input the IP: ");
@@ -32,43 +40,6 @@ public class Client implements Runnable{
 		while(port < 1 || port > 65535) {
 			System.out.println("Please input another Port: ");
 			port = scanner.nextInt();
-		}
-	}
-	
-	private void start() {
-		if (running)
-			return;
-		running = true;
-		thread = new Thread(this);
-		thread.start();
-	}
-
-	private void stop() {
-		if (!running)
-			return;
-		running = false;
-		try {
-			thread.join();
-		} catch (InterruptedException e) {
-			e.printStackTrace();
-			System.exit(0);
-		}
-	}
-	
-	int xx = 0;
-	public void run() {
-	
-		while(running) {
-			if( xx < 4) {
-				connect();
-				
-				sendData();
-				readInputData();
-				
-				xx++;
-				System.out.println(xx);
-			}
-			
 		}
 	
 	}
@@ -89,7 +60,15 @@ public class Client implements Runnable{
 	
 	public void readInputData() {
 		try {
-			System.out.println(dis.readUTF());
+			String input = dis.readUTF();
+			//stores unique ID if its assigned and doesn't have one already
+			if(clientID == null && input.contains("Assigned ClientID:")) {
+				clientID = input.substring(input.indexOf(":")+1);
+				System.out.println("TEST CLIENT ID" + clientID);
+				return;
+			}
+			System.out.println(input);
+			
 		} catch (IOException e) {
 			System.out.println("Unable to read data from server");
 			e.printStackTrace();
@@ -98,17 +77,13 @@ public class Client implements Runnable{
 	
 	public void sendData() {
 		try {
-			dos.writeUTF("Test"+xx);
+			dos.writeUTF(CLIENT_ID_TAG+clientID);
+			System.out.println("sent data" + clientID);
+			
 			System.out.println("Data sent to the server");
 		} catch (IOException e) {
 			System.out.println("Unable to send data to the server");
 			e.printStackTrace();
 		}
-	}
-
-	
-	public static void main(String[] args) throws IOException {
-		Client client = new Client();
-		client.start();
 	}
 }

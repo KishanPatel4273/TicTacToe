@@ -1,0 +1,7 @@
+{ 
+	"playerOneID": "",
+ 	"playerTwoID": "",
+	"playerOnesTurn": true,
+	"gameState": [0, 0, 0, 0, 0, 0, 0, 0, 0],
+	"spectatorsID" : [] 
+}
