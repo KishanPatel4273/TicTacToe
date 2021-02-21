@@ -37,7 +37,7 @@ public class TicTacToe extends Canvas implements Runnable{
 		setMaximumSize(size);
 		
 		client = new Client();
-		
+		client.connect();
 	}
 	
 	private void start() {
@@ -62,12 +62,12 @@ public class TicTacToe extends Canvas implements Runnable{
 	
 	int xx = 0;
 	public void run() {
-	
+		
+		
 		while(running) {
 			
-			if(xx < 3) {
-				client.connect();
-				
+			if(xx > -1) {
+			
 				tick();
 				render();
 				client.sendData();
@@ -76,15 +76,15 @@ public class TicTacToe extends Canvas implements Runnable{
 			}
 	
 		}
-	
+		
 	}
 	
 	public void tick() {
 		//check if its this clients turn
-		System.out.println(Server.Server.turn(client.clientID) + " " + client.clientID);
-		System.out.println(Server.Server.gameStateObj.getBoolean("playerOnesTurn"));
+		System.out.println("turn return:" + Server.Server.turn(client.clientID) + " " + client.clientID);
+		System.out.println(Server.Server.turn(client.clientID));
 		if(Server.Server.turn(client.clientID)) {
-			System.out.println("your turn " + client.clientID);
+			System.out.println("--------------- Your Turn -------------------");
 		}
 	}
 	

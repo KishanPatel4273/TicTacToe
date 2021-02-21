@@ -67,7 +67,7 @@ public class Client {//implements Runnable
 				System.out.println("TEST CLIENT ID" + clientID);
 				return;
 			}
-			System.out.println(input);
+			System.out.println("------------------>" + input);
 			
 		} catch (IOException e) {
 			System.out.println("Unable to read data from server");
