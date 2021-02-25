@@ -35,13 +35,16 @@ public class Server implements Runnable{
 	private String connectedTo = "";//which client is the server connected too
 	
 	
-	private final static String NEW_GAME_DATA = "	 { \"playerOneID\": \"\", "
+	public final static String NEW_GAME_DATA = "{ \"playerOneID\": \"\", "
 													+ "\"playerTwoID\": \"\","
 													+ "\"playerOnesTurn\":true,"
 													+ "\"gameState\": [0, 0, 0, 0, 0, 0, 0, 0, 0],"
 													+ "\"spectatorsID\" : [] }";
 	
-	public static JSONObject gameStateObj = new JSONObject(NEW_GAME_DATA);
+	public static JSONObject gameState = new JSONObject(NEW_GAME_DATA);
+	public static String test = "";
+	
+	
 	private String clientID = "";
 	public static int IDuniqueness = 5;// P(ERROR) = 10^(-IDuniqueness)
 	private boolean sendClientID = false;
@@ -132,22 +135,18 @@ public class Server implements Runnable{
 			}
 		}
 	}
-	
-	//runs the tictactoe game
-	public void gameTick() {
-		
-	}
+
 	
 	/**
 	 * resents game attributes;
 	 */
 	public void startGame() {
-		gameStateObj = new JSONObject(NEW_GAME_DATA);
+		Client.Client.gameStateObj = new JSONObject(NEW_GAME_DATA);
 	
 		//coin flip to see who goes first
 		// 50/50 which player goes first
 		if(Math.random() > 0.5) {
-			gameStateObj.put("playerOnesTurn", false);
+			Client.Client.gameStateObj.put("playerOnesTurn", true);
 		}
 		System.out.println("//////////////////////////////////////////////////////////////////");
 	}
@@ -163,34 +162,4 @@ public class Server implements Runnable{
 
 		serverC.start();
 	}
-	
-	
-	/**}
-	 * @param ID
-	 * @return true if the given id is going 
-	 */
-	public static boolean turn(String ID) {
-		//waiting for both players
-		if(gameStateObj.getString("playerOneID").equals("")
-				|| gameStateObj.getString("playerTwoID").equals("")) {
-			//return false;
-		}
-		
-		//if its player ones turn and id is player one -> true 
-		// Or then its player twos turn and if id is player two -> ture 
-		//return gameStateObj.getString("playerTwoID").equals(ID);
-		System.out.println("------------------------------" );
-		if(gameStateObj.getBoolean("playerOnesTurn")) {
-			System.out.println("_------------------------------------_-TRUE");
-		}
-		System.out.println(gameStateObj.toString());//getString("playerOneID"));
-		System.out.println(ID);
-		
-		if(gameStateObj.getString("playerOneID").equals(ID)) {
-			return gameStateObj.getBoolean("playerOnesTurn");
-		} else {//its player two
-			return !gameStateObj.getBoolean("playerOnesTurn");
-		}	
-	}
-
 }

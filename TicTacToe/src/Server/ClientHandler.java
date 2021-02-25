@@ -8,6 +8,8 @@ import java.io.InputStreamReader;
 import java.io.PrintWriter;
 import java.net.Socket;
 
+import org.json.JSONObject;
+
 public class ClientHandler implements Runnable {
 
 	private Socket client;
@@ -39,7 +41,8 @@ public class ClientHandler implements Runnable {
 	}
 	
 	public void tick() {
-	
+		System.out.println(Client.Client.gameStateObj.toString());
+		//the access here has stores the id 
 	}
 	
 	/** Assigns the first and second unique clients (IP is ignored) to the two players
@@ -47,15 +50,14 @@ public class ClientHandler implements Runnable {
 	 */
 	public void clientIDAssigner() {
 		//first player to join and will be under playerOneID
-		if(Server.gameStateObj.getString("playerOneID").equals("")) {
+		if(Client.Client.gameStateObj.getString("playerOneID").equals("")) {
 			clientID = connectedTo + (int) (Math.random() * Math.pow(10, IDuniqueness));//generates ID
-			Server.gameStateObj.put("playerOneID", clientID);//saves ID
+			Client.Client.gameStateObj.put("playerOneID", clientID);//saves ID
 			sendClientID = true;//will send the client its ID
 								//^^^^^^^^^^^
-			System.out.println(Server.gameStateObj.getString("playerOneID").length());
-		} else if(Server.gameStateObj.getString("playerTwoID").equals("")) {
+		} else if(Client.Client.gameStateObj.getString("playerTwoID").equals("")) {
 			clientID = connectedTo + (int) (Math.random() * Math.pow(10, IDuniqueness));
-			Server.gameStateObj.put("playerTwoID", clientID);
+			Client.Client.gameStateObj.put("playerTwoID", clientID);
 			sendClientID = true;
 		} else {
 			clientID = "spectator";
@@ -69,8 +71,8 @@ public class ClientHandler implements Runnable {
 	 * @called in readInputData()
 	 */
 	public void clientIDAssignerFix(String connectedID) {
-		if(sendClientID && Server.gameStateObj.getString("playerOneID").equals(connectedID)) {
-			Server.gameStateObj.put("playerTwoID", "");//corrects error
+		if(sendClientID && Client.Client.gameStateObj.getString("playerOneID").equals(connectedID)) {
+			Client.Client.gameStateObj.put("playerTwoID", "");//corrects error
 			sendClientID = false;	
 		}
 	}
@@ -101,14 +103,11 @@ public class ClientHandler implements Runnable {
 				return;
 			}
 			
-			dos.writeUTF(Server.gameStateObj.toString());
+			dos.writeUTF("Game State:");
 			//System.out.println("Data sent to the Client");
 		} catch (IOException e) {
 			System.out.println("Unable to send data to the Client");
 			e.printStackTrace();
 		}
 	}
-
-	
-	
 }

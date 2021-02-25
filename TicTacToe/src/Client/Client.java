@@ -11,6 +11,10 @@ import java.util.Scanner;
 
 import javax.swing.JFrame;
 
+import org.json.JSONObject;
+
+import Server.Server;
+
 public class Client {//implements Runnable
 	
 	private static Socket socket;
@@ -18,15 +22,18 @@ public class Client {//implements Runnable
 	private static DataOutputStream dos;
 	
 	private String ip = "localHost";
-	private static int port = 7778;
+	private static int port = 22222;
 	private boolean accepted = false;
 	private Scanner scanner = new Scanner(System.in);
 	
 	//differentiating players
-	public String clientID;
+	public String clientID = "";
 	
 	//tags
-	public static final String CLIENT_ID_TAG = Server.Server.CLIENT_ID_TAG;
+	public static final String CLIENT_ID_TAG = Server.CLIENT_ID_TAG;
+	
+	//game state
+	public static JSONObject gameStateObj = new JSONObject(Server.NEW_GAME_DATA);
 	
 	//input (should be json game type)
 	public String inputData = "";
@@ -62,13 +69,15 @@ public class Client {//implements Runnable
 		try {
 			String input = dis.readUTF();
 			//stores unique ID if its assigned and doesn't have one already
-			if(clientID == null && input.contains("Assigned ClientID:")) {
+			if(input.contains("Assigned " + Server.CLIENT_ID_TAG)) {
 				clientID = input.substring(input.indexOf(":")+1);
-				System.out.println("TEST CLIENT ID" + clientID);
+				System.out.println("CLIENT ID IS SET");
 				return;
 			}
-			System.out.println("------------------>" + input);
-			
+			if(input.contains("Game State:")) {
+				String gameStateInput = input.substring(input.indexOf(":")+1);
+				//gameStateObj = new JSONObject(gameStateInput);
+			}
 		} catch (IOException e) {
 			System.out.println("Unable to read data from server");
 			e.printStackTrace();
@@ -78,9 +87,9 @@ public class Client {//implements Runnable
 	public void sendData() {
 		try {
 			dos.writeUTF(CLIENT_ID_TAG+clientID);
-			System.out.println("sent data" + clientID);
+			//System.out.println("sent data" + clientID);
 			
-			System.out.println("Data sent to the server");
+			//System.out.println("Data sent to the server");
 		} catch (IOException e) {
 			System.out.println("Unable to send data to the server");
 			e.printStackTrace();
