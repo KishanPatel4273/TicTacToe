@@ -19,8 +19,6 @@ import javax.swing.JFrame;
 import org.json.JSONArray;
 import org.json.JSONObject;
 
-import Server.Server;
-
 public class TicTacToe extends Canvas implements Runnable{
 	
 	public static final int WIDTH = 301;
@@ -35,8 +33,6 @@ public class TicTacToe extends Canvas implements Runnable{
 	private InputHandler input;
 		
 	private Font font = new Font("Verdana", Font.BOLD, 32);
-	
-	
 	
 	public TicTacToe() {
 		Dimension size = new Dimension(WIDTH, HEIGHT);
@@ -79,25 +75,20 @@ public class TicTacToe extends Canvas implements Runnable{
 		
 		
 		while(running) {
+
+			tick();
+			render();
+			client.sendData();
+			client.readInputData();
 			
-			if(xx > -1) {
-			
-				tick();
-				render();
-				client.sendData();
-				client.readInputData();
-				xx++;
-			}
-	
 		}
 		
 	}
 	
 	public void tick() {
-		upadateBoard(Client.gameStateObj);
+		upadateBoard();
 		//System.out.println(Client.gameStateObj);
-		System.out.println(client.clientID);
-		Server.test = client.clientID;
+		//System.out.println(client.clientID);
 	}
 	
 	private void render() {
@@ -111,7 +102,7 @@ public class TicTacToe extends Canvas implements Runnable{
 		g.clearRect(0, 0, WIDTH, HEIGHT);
 		
 		
-		renderBoard(g, getBoard(Client.gameStateObj));
+		renderBoard(g, client.gameBoard);
 		
 		g.setFont(new Font("Arial", 0, 10));
 		g.setColor(Color.WHITE);
@@ -158,51 +149,26 @@ public class TicTacToe extends Canvas implements Runnable{
 	 * @returns updates gameStateObj if its this players turn and makes a move
 	 */
 	public void upadateBoard() {
-		if(turn(client.clientID, client.gameStateObj) && input.mouseClicked) {//your turn and u made a move
-			System.out.println("(" + input.mouseX + ", " + input.mouseY + ")");
+		if(client.turn && input.mouseClicked) {//your turn and u made a move
+			//System.out.println("(" + input.mouseX + ", " + input.mouseY + ")");
 			int i = getBoardIndex(input.mouseX, input.mouseY);
-			if(i != -1 && client.gameStateObj.getJSONArray("gameState").getInt(i) == 0) {//stop is open
-				int[] tempBoard = getBoard(client.gameStateObj);
-				tempBoard[i] = gamePiece(client.clientID, client.gameStateObj);//updates board
-				client.gameStateObj.put("gameState", new JSONArray(tempBoard));
-				client.gameStateObj.put("playerOnesTurn", !client.gameStateObj.getBoolean("playerOnesTurn"));//turn is flipped
-				input.mouseClicked = false;
-				System.out.println("flipped");
+			if(i != -1) {//stop is open
+				if(client.move.equals("")) {
+					client.move = "move:" + i;
+					System.out.println(client.clientID);
+					input.mouseClicked = false;
+				}
+				
+				//int[] tempBoard = getBoard(client.gameStateObj);	
+				//tempBoard[i] = gamePiece(client.clientID, client.gameStateObj);//updates board
+				//client.gameStateObj.put("gameState", new JSONArray(tempBoard));
+				//client.gameStateObj.put("playerOnesTurn", !client.gameStateObj.getBoolean("playerOnesTurn"));//turn is flipped
+				//input.mouseClicked = false;
+				//System.out.println("flipped");
 			}
 		}
 	}
 	
-	public void upadateBoard(JSONObject state) {
-		if(turn(client.clientID, state) && input.mouseClicked) {//your turn and u made a move
-			System.out.println("(" + input.mouseX + ", " + input.mouseY + ")");
-			int i = getBoardIndex(input.mouseX, input.mouseY);
-			if(i != -1 && state.getJSONArray("gameState").getInt(i) == 0) {//stop is open
-				int[] tempBoard = getBoard(state);
-				tempBoard[i] = gamePiece(client.clientID, state);//updates board
-				state.put("gameState", new JSONArray(tempBoard));
-				state.put("playerOnesTurn", !state.getBoolean("playerOnesTurn"));//turn is flipped
-				System.out.println("///////////////////////////////////////////");
-				System.out.println(client.gameStateObj);
-				System.out.println(Client.gameStateObj);
-				System.out.println(state);
-				input.mouseClicked = false;
-				System.out.println("flipped");
-			}
-		}
-	}
-	
-	/**
-	 * @param x
-	 * @return converts a JSONArray to an array
-	 */
-	public int[] getBoard(JSONObject x) {
-		
-		int[] y = new int[x.getJSONArray("gameState").length()];
-		for(int i = 0; i < y.length; i++) {
-			y[i] = x.getJSONArray("gameState").getInt(i);
-		}
-		return y;
-	}
 	
 	public static void main(String[] args) throws IOException {
 		TicTacToe game = new TicTacToe();
@@ -226,8 +192,12 @@ public class TicTacToe extends Canvas implements Runnable{
 				+ "\"spectatorsID\" : [] }";
 	}
 	
+	/**
+	 * @param x position of mouse
+	 * @param y position of mouse
+	 * @return tile clicked on 3x3 grid
+	 */
 	public int getBoardIndex(int x, int y) {
-		int index = 0;
 		for(int i = 0; i < 9; i++) {
 			int xx = i%3 + 1;
 			int yy = (int) Math.floor(i/3) + 1;
@@ -268,40 +238,5 @@ public class TicTacToe extends Canvas implements Runnable{
 		return (board[0] + board[4] + board[8]) == check ||
 				(board[2] + board[4] + board[6]) == check;
 	}
-	
-	/**}
-	 * @param ID
-	 * @return true if the given id is going 
-	 */
-	public static boolean turn(String ID, JSONObject state) {
-		//waiting for both players
-		if(state.getString("playerOneID").equals("")
-				|| state.getString("playerTwoID").equals("")) {
-			//return false;
-		}
-		//System.out.println(state.getString("playerOneID"));
-		//System.out.println("ID : " + ID);
-		if(state.getString("playerOneID").equals(ID)) {
-			return state.getBoolean("playerOnesTurn");
-		} else if(state.getString("playerTwoID").equals(ID)) {
-			return !state.getBoolean("playerOnesTurn");
-		} else {
-			return false;
-		}
-		
-		//if its player ones turn and id is player one -> true 
-		// Or then its player twos turn and if id is player two -> ture 
-		//return gameStateObj.getString("playerTwoID").equals(ID);
-		//return (state.getBoolean("playerOnesTurn") && state.getString("playerOneID").equals(ID)) 
-		//		||  state.getString("playerTwoID").equals(ID);
-	}
-	
-	public static int gamePiece(String ID, JSONObject state) {
-		if(state.getString("playerOneID").equals(ID)) {
-			return -1;
-		} else if(state.getString("playerTwoID").equals(ID)) {
-			return 1;
-		}
-		return 0;
-	}
+
 }

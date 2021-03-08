@@ -57,6 +57,7 @@ public class Server implements Runnable{
 	
 	
 	public Server() throws IOException, ClassNotFoundException {
+		System.out.println("CLIENT STILL DOESNT HAVE ITS OWN ID");
 		startGame();//sets the setting for the game
 		System.out.println("Please input the Port: ");
 		port = scanner.nextInt();
