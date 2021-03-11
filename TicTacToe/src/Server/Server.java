@@ -57,7 +57,6 @@ public class Server implements Runnable{
 	
 	
 	public Server() throws IOException, ClassNotFoundException {
-		System.out.println("CLIENT STILL DOESNT HAVE ITS OWN ID");
 		startGame();//sets the setting for the game
 		System.out.println("Please input the Port: ");
 		port = scanner.nextInt();
@@ -68,13 +67,12 @@ public class Server implements Runnable{
 		}
 		
 		serverListener = new ServerSocket(port);
-		
+	}
 	
-		
-		//String testStr = gameStateObj.getString("playerOneID");
-		//JSONArray arr = gameStateObj.getJSONArray("gameState");
-		
-		//System.out.println(gameStateObj.names());
+	public Server(int port) throws IOException, ClassNotFoundException {
+		startGame();//sets the setting for the game
+		this.port = port;
+		serverListener = new ServerSocket(port);
 	}
 	
 	private void start() {
@@ -117,50 +115,48 @@ public class Server implements Runnable{
 		}
 	}
 	
-	public void run2() {
-	
-		while(running) {
-			listenForServerRequest();
-			if(accepted) {
-				readInputData();
-			}
-			String str = "";//scanner.nextLine();
-			if(!str.equals("")) {
-				str = "";
-			}
-			//it waits for a response (the scanner)
-			//System.out.println("test! Print");
-			
-			if(accepted) {
-				sendData();
-			}
-		}
-	}
-
-	
 	/**
 	 * resents game attributes;
 	 */
 	public void startGame() {
-		Client.Client.gameStateObj = new JSONObject(NEW_GAME_DATA);
+		ClientHandler.gameStateObj = new JSONObject(NEW_GAME_DATA);
 	
 		//coin flip to see who goes first
 		// 50/50 which player goes first
 		if(Math.random() > 0.5) {
-			Client.Client.gameStateObj.put("playerOnesTurn", true);
+			ClientHandler.gameStateObj.put("playerOnesTurn", false);
 		}
-		System.out.println("//////////////////////////////////////////////////////////////////");
+	}
+
+	/**
+	 * keeps Client IDs
+	 * Doesn't work
+	 */
+	public static void restartGame() {
+		ClientHandler.gameStateObj.put("playerOnesTurn", true);
+		ClientHandler.gameStateObj.put("gameState", new JSONArray(new int[]{0, 0, 0, 0, 0, 0, 0, 0, 0}));
+		if(Math.random() > 0.5) {
+			ClientHandler.gameStateObj.put("playerOnesTurn", false);
+		}
 	}
 	
 	public static void main(String[] args)  throws IOException, ClassNotFoundException {
 		System.out.println("starting Sever");
 		
-		Server serverC = new Server();
+		int port = 0;
+		for(int i = 0; i < args.length; i++) {
+			if(args[i].contains("Port:")) {
+				port = Integer.valueOf(args[i].substring(args[i].indexOf(":") + 1));
+			}
+		}
 		
-		
+		Server serverC;
+		if(port != 0) {
+			serverC = new Server(port);
+		} else {
+			serverC = new Server();
+		}
 		System.out.println("server started");
-		
-
 		serverC.start();
 	}
 }

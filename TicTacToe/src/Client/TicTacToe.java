@@ -5,6 +5,7 @@ import java.awt.Color;
 import java.awt.Dimension;
 import java.awt.Font;
 import java.awt.Graphics;
+import java.awt.event.KeyEvent;
 import java.awt.image.BufferStrategy;
 import java.awt.image.BufferedImage;
 import java.io.DataInputStream;
@@ -32,7 +33,7 @@ public class TicTacToe extends Canvas implements Runnable{
 	private Client client;
 	private InputHandler input;
 		
-	private Font font = new Font("Verdana", Font.BOLD, 32);
+	private Font font = new Font("Verdana", Font.BOLD, 14);
 	
 	public TicTacToe() {
 		Dimension size = new Dimension(WIDTH, HEIGHT);
@@ -75,7 +76,9 @@ public class TicTacToe extends Canvas implements Runnable{
 		
 		
 		while(running) {
-
+			//System.out.println(client.clientID);
+			//System.out.println("(" + input.mouseX + ", " + input.mouseY + ")");
+			//ID and input work
 			tick();
 			render();
 			client.sendData();
@@ -86,9 +89,16 @@ public class TicTacToe extends Canvas implements Runnable{
 	}
 	
 	public void tick() {
+		// move is valid if its your turn
+		if(!client.turn && !client.move.equals("")) {
+			client.move = "";
+			input.mouseClicked = false;
+		}
 		upadateBoard();
-		//System.out.println(Client.gameStateObj);
-		//System.out.println(client.clientID);
+		
+		if(input.key[KeyEvent.VK_R]) {
+			Server.Server.restartGame();
+		}
 	}
 	
 	private void render() {
@@ -104,8 +114,24 @@ public class TicTacToe extends Canvas implements Runnable{
 		
 		renderBoard(g, client.gameBoard);
 		
-		g.setFont(new Font("Arial", 0, 10));
-		g.setColor(Color.WHITE);
+		
+		//render state
+		String state;
+		if(client.turn) {
+			state = "It is your turn.";
+		} else {
+			state = "It is the opponents turn.";
+		}
+		
+		System.out.println(client.gamePiece);
+		if(gameStatus(client.gameBoard, client.gamePiece)) {
+			state = "You won, congratulations!";
+		} else if(gameStatus(client.gameBoard, -1 * client.gamePiece)) {
+			state = "Your opponent won.";
+		}
+		g.setFont(font);
+		g.drawString(state, tileSize/10, (int) (3.5 * tileSize));
+		
 		
 		g.dispose();
 		bs.show();
@@ -131,7 +157,6 @@ public class TicTacToe extends Canvas implements Runnable{
 				renderO(g, i%3*tileSize, (int) Math.floor(i/3)*tileSize);
 			}
 		}
-		//renderO(g, 100, 0);
 	}
 	
 	public void renderX(Graphics g, int x, int y) {
@@ -155,8 +180,9 @@ public class TicTacToe extends Canvas implements Runnable{
 			if(i != -1) {//stop is open
 				if(client.move.equals("")) {
 					client.move = "move:" + i;
-					System.out.println(client.clientID);
 					input.mouseClicked = false;
+					input.mouseX = -WIDTH; 
+					input.mouseY = -HEIGHT;
 				}
 				
 				//int[] tempBoard = getBoard(client.gameStateObj);	
@@ -201,7 +227,7 @@ public class TicTacToe extends Canvas implements Runnable{
 		for(int i = 0; i < 9; i++) {
 			int xx = i%3 + 1;
 			int yy = (int) Math.floor(i/3) + 1;
-			if(x < xx*tileSize && y < yy*tileSize) {
+			if(0 <= x && x < xx*tileSize && 0 < y && y < yy*tileSize) {
 				return i;
 			}
 		}
@@ -218,16 +244,16 @@ public class TicTacToe extends Canvas implements Runnable{
 		int check = 3*piece;
 		int[] hv = {0, 0, 0, 0, 0, 0};
 		for(int i = 0; i < 3; i++) {
-		//			hv[0] += board[3*i]; //0 3 6
-		//			hv[1] += board[3*i+1]; //1 4 7
-		//			hv[2] += board[3*i+2]; //2 5 8
-		//			hv[3] += board[i]; //0 1 2
-		//			hv[4] += board[3+i]; //3 4 5
-		//			hv[5] += board[6+i]; //6 7 8
-			for(int j = 0; j < 3; j++) {
-				hv[i] += board[3*i+j]; 
-				hv[i+3] = board[3*j+i];	
-			}	
+					hv[0] += board[3*i]; //0 3 6
+					hv[1] += board[3*i+1]; //1 4 7
+					hv[2] += board[3*i+2]; //2 5 8
+					hv[3] += board[i]; //0 1 2
+					hv[4] += board[3+i]; //3 4 5
+					hv[5] += board[6+i]; //6 7 8
+			//for(int j = 0; j < 3; j++) {
+			//	hv[i] += board[3*i+j]; 
+			//	hv[i+3] = board[3*j+i];	
+			//}	
 		}
 		for(int total: hv) {
 			if(total == check) {
@@ -237,6 +263,15 @@ public class TicTacToe extends Canvas implements Runnable{
 		//diagonal
 		return (board[0] + board[4] + board[8]) == check ||
 				(board[2] + board[4] + board[6]) == check;
+	}
+	
+	/**
+	 * 
+	 * @param board int[] of game board
+	 * @return if any player won
+	 */
+	public static boolean gameStatus(int[] board) {
+		return gameStatus(board, -1) || gameStatus(board, 1);
 	}
 
 }

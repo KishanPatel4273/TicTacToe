@@ -13,6 +13,8 @@ import java.util.Arrays;
 import org.json.JSONArray;
 import org.json.JSONObject;
 
+import Client.TicTacToe;
+
 public class ClientHandler implements Runnable {
 
 	private Socket client;
@@ -22,11 +24,16 @@ public class ClientHandler implements Runnable {
 	private int IDuniqueness = Server.IDuniqueness;
 	private String connectedTo;
 	private String clientID;
+	private int gamePiece;
 	private boolean sendClientID;
 	private final String CLIENT_ID_TAG = Server.CLIENT_ID_TAG;
 	
 	//data to sent to the client
 	private String sendingData = "";
+	
+	//game state
+	public static JSONObject gameStateObj = new JSONObject(Server.NEW_GAME_DATA);
+		
 	
 	public ClientHandler(Socket clientSocket) throws IOException {
 		this.client = clientSocket;
@@ -48,8 +55,7 @@ public class ClientHandler implements Runnable {
 	
 	public void tick() {
 		gameStateUpdatelocaly();
-		//System.out.println(Client.Client.gameStateObj.toString());
-		//the access here has stores the id 
+		
 	}
 	
 	
@@ -58,9 +64,11 @@ public class ClientHandler implements Runnable {
 	 */
 	public synchronized void gameStateUpdatelocaly() {
 		//System.out.println("TEST:" + clientID);
-		//System.out.println("TEST:" + Client.Client.gameStateObj);
-		sendingData = "Turn:" + turn(clientID, Client.Client.gameStateObj) + "|"
-				    + "Board:" + Arrays.toString(getBoard(Client.Client.gameStateObj)) + "|";
+		//System.out.println("TEST:" + ClientHandler.gameStateObj);
+		sendingData = "Turn:" + turn(clientID, ClientHandler.gameStateObj) + "|"
+				    + "Board:" + Arrays.toString(getBoard(ClientHandler.gameStateObj)) + "|"
+					+ "Piece:" + gamePiece(clientID, ClientHandler.gameStateObj) + "|";
+		//System.out.println(clientID + " -----> " + sendingData);
 	}
 	
 	/** Assigns the first and second unique clients (IP is ignored) to the two players
@@ -68,14 +76,14 @@ public class ClientHandler implements Runnable {
 	 */
 	public synchronized void clientIDAssigner() {
 		//first player to join and will be under playerOneID
-		if(Client.Client.gameStateObj.getString("playerOneID").equals("")) {
+		if(ClientHandler.gameStateObj.getString("playerOneID").equals("")) {
 			clientID = connectedTo + (int) (Math.random() * Math.pow(10, IDuniqueness));//generates ID
-			Client.Client.gameStateObj.put("playerOneID", clientID);//saves ID
+			ClientHandler.gameStateObj.put("playerOneID", clientID);//saves ID
 			sendClientID = true;//will send the client its ID
 								//^^^^^^^^^^^
-		} else if(Client.Client.gameStateObj.getString("playerTwoID").equals("")) {
+		} else if(ClientHandler.gameStateObj.getString("playerTwoID").equals("")) {
 			clientID = connectedTo + (int) (Math.random() * Math.pow(10, IDuniqueness));
-			Client.Client.gameStateObj.put("playerTwoID", clientID);
+			ClientHandler.gameStateObj.put("playerTwoID", clientID);
 			sendClientID = true;
 		} else {
 			clientID = "spectator";
@@ -89,9 +97,9 @@ public class ClientHandler implements Runnable {
 	 * @called in readInputData()
 	 */
 	public synchronized void clientIDAssignerFix(String connectedID) {
-		if(sendClientID && Client.Client.gameStateObj.getString("playerOneID").equals(connectedID)) {
-			Client.Client.gameStateObj.put("playerTwoID", "");//corrects error
-			sendClientID = false;	
+		if(sendClientID && ClientHandler.gameStateObj.getString("playerOneID").equals(connectedID)) {
+			ClientHandler.gameStateObj.put("playerTwoID", "");//corrects error
+			//sendClientID = false;	
 		}
 	}
 	
@@ -112,7 +120,7 @@ public class ClientHandler implements Runnable {
 				int move = Integer.valueOf(getValue("move:", input, "|"));
 				move(move);
 			}			
-			//System.out.println("---------------" + turn(clientID, Client.Client.gameStateObj));
+			//System.out.println("---------------" + turn(clientID, ClientHandler.gameStateObj));
 			//System.out.println(input);
 			
 		} catch (IOException e) {
@@ -126,16 +134,16 @@ public class ClientHandler implements Runnable {
 	 * @param move integer value of tile clicked
 	 */
 	public synchronized void move(int move) {
-		if(turn(clientID, Client.Client.gameStateObj)) {
-			int[] board = getBoard(Client.Client.gameStateObj);
+		if(turn(clientID, ClientHandler.gameStateObj)) {
+			int[] board = getBoard(ClientHandler.gameStateObj);
 			if(board[move] == 0) {//spot is open
 				//updates the game board
-				board[move] = gamePiece(clientID, Client.Client.gameStateObj);
+				board[move] = gamePiece(clientID, ClientHandler.gameStateObj);
 				//updates main game state json
-				Client.Client.gameStateObj.put("gameState", new JSONArray(board));
+				ClientHandler.gameStateObj.put("gameState", new JSONArray(board));
 				//turn is over
-				Client.Client.gameStateObj.put("playerOnesTurn", !Client.Client.gameStateObj.getBoolean("playerOnesTurn"));
-				System.out.println(Client.Client.gameStateObj);
+				ClientHandler.gameStateObj.put("playerOnesTurn", !ClientHandler.gameStateObj.getBoolean("playerOnesTurn"));
+				System.out.println(ClientHandler.gameStateObj);
 			}
 		}
 	}
@@ -145,13 +153,15 @@ public class ClientHandler implements Runnable {
 		try {
 			if(sendClientID) {
 				dos.writeUTF("Assigned " + CLIENT_ID_TAG + clientID);	
-				clientID = "";
+				//Y THE FUCK WOULD U WRITE THIS
+				//clientID = "";
 				sendClientID = false;
 				return;
 			}
 			
 			if(!sendingData.equals("")) {
 				dos.writeUTF(sendingData);
+				return;
 			}
 			
 			dos.writeUTF("Game State:");
@@ -178,7 +188,7 @@ public class ClientHandler implements Runnable {
 				|| p2.equals("")) {
 			//return false;
 		}
-		//System.out.println(state.getString("playerOneID"));
+		//System.out.println(gameState);
 		//System.out.println("ID : " + ID);
 		if(p1.equals(ID)) {
 			return pt;
@@ -247,9 +257,11 @@ public class ClientHandler implements Runnable {
 	
 	//	/127.0.0.116014
 	public static void main(String[] args) {
-		if("true".equals("true")) {
-			System.out.println("works");
-		}
-		System.out.println("----");
+		int[] x = new int[] {-1, 1, 1, 
+						     1, -1, 1,
+						     0, 0, 1};
+		System.out.println(TicTacToe.gameStatus(x, 1));
 	}
+	
+	
 }

@@ -34,15 +34,13 @@ public class Client {//implements Runnable
 	//tags
 	public static final String CLIENT_ID_TAG = Server.CLIENT_ID_TAG;
 	
-	//game state
-	public static JSONObject gameStateObj = new JSONObject(Server.NEW_GAME_DATA);
-	
 	public String move = "";
 	//if its this players turn
 	public boolean turn = false;
 	//game board
 	public int[] gameBoard = new int[9];
 	
+	public int gamePiece;
 	
 	//input (should be json game type)
 	public String inputData = "";
@@ -78,6 +76,9 @@ public class Client {//implements Runnable
 		try {
 			String input = dis.readUTF();
 			//stores unique ID if its assigned and doesn't have one already
+			
+			System.out.println(clientID + " -----> " + input);
+			
 			if(input.contains("Assigned " + Server.CLIENT_ID_TAG)) {
 				clientID = input.substring(input.indexOf(":")+1);
 				System.out.println("CLIENT ID IS SET");
@@ -89,16 +90,13 @@ public class Client {//implements Runnable
 			}
 			if(input.contains("Turn:")) {
 				turn = ClientHandler.getValue("Turn:", input, "|").equals("true");
-				//if(turn)
-				//	System.out.println("your turn from the handler -->" + turn+"|");	
-				//else
-				//System.out.println(clientID);
-			
-				//player1 is fucked
 			}
 			if(input.contains("Board:")) {
 				gameBoard = ClientHandler.getArray((ClientHandler.getValue("Board:", input, "|")));
 				//System.out.println("your Board from the handler -->" + Arrays.toString(gameBoard));
+			}
+			if(input.contains("Piece:")) {
+				gamePiece = Integer.valueOf(ClientHandler.getValue("Piece:", input, "|"));
 			}
 		} catch (IOException e) {
 			System.out.println("Unable to read data from server");
@@ -110,6 +108,7 @@ public class Client {//implements Runnable
 		try {
 			if(move.contains("move:")) {
 				dos.writeUTF(CLIENT_ID_TAG+clientID + "|" + move + "|");
+				//System.out.println(move);
 				move = "";
 				return;
 			}
